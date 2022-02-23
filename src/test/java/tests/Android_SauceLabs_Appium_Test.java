@@ -25,7 +25,7 @@ import java.net.URL;
 public class Android_SauceLabs_Appium_Test {
     // options
     private static final boolean STAGING = false;
-    private static final boolean EMULATE = false;
+    private static final boolean EMULATE = true;
     private static final String ANDROID_VERSION = "10";
 
     private static final String APP_NAME = "Android.SauceLabs.Mobile.Sample.app.2.7.1.apk";
@@ -73,17 +73,17 @@ public class Android_SauceLabs_Appium_Test {
         caps.setCapability("platformName", "Android");
         caps.setCapability("app", appUrl);
         caps.setCapability("platformVersion", ANDROID_VERSION);
+        MutableCapabilities sauceOptions = new MutableCapabilities();
+        sauceOptions.setCapability("name", methodName); //Method added as parameter
 
         if (EMULATE) {
             caps.setCapability("automationName", "UiAutomator2");
             caps.setCapability("deviceName", "Android GoogleAPI Emulator"); //This will change to type of device e.g. Pixel 4 on Saucelabs
         } else {
-            MutableCapabilities sauceOptions = new MutableCapabilities();
-            sauceOptions.setCapability("name", methodName); //Method added as parameter
             sauceOptions.setCapability("username", username); //Method added as parameter
             sauceOptions.setCapability("accessKey", accessKey); //Method added as parameter
-            caps.setCapability("sauce:options", sauceOptions);
         }
+        caps.setCapability("sauce:options", sauceOptions);
 
         driver = new AndroidDriver(url, caps);
     }
