@@ -1,0 +1,8 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="Android Mobile Demo Suite">
+    <test name="Simple execution tests Android">
+        <classes>
+            <class name="tests.Android_SauceLabs_Appium_Test"/>
+        </classes>
+    </test>
+</suite>
