@@ -9,6 +9,7 @@ package tests;
 
 import io.appium.java_client.MobileBy;
 import io.appium.java_client.android.AndroidDriver;
+import io.appium.java_client.ios.IOSDriver;
 import org.openqa.selenium.*;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -24,25 +25,31 @@ import java.net.URL;
 
 public class Android_SauceLabs_Appium_Test {
     // options
-    private static final boolean STAGING = false;
-    private static final boolean EMULATE = true;
-    private static final String ANDROID_VERSION = "10";
+    private static final boolean STAGING = true;
+    private static final boolean EMULATE = false;
+    private static final String PLATFORM_NAME = "iOS"; //ios or android
+    private static final String PLATFORM_VERSION = "";
 
-    private static final String APP_NAME = "Android.SauceLabs.Mobile.Sample.app.2.7.1.apk";
+    private static final String APP_NAME = "iOS-Real-Device-MyRNDemoApp.1.3.0-162 (2).ipa"; //"app-rcandi-debug.apk";
     private static final String APP_ID = ""; //if ID is not empty it overrides name
-    private static final String APP_ACTIVITY = "com.swaglabsmobileapp.MainActivity";
+    private static final String APP_ACTIVITY = ""; // = "com.sharecare.realgreen.MainActivity";
+    private static final String DEVICE_NAME = "";
+    private static final String APP_EXTERNAL_URL = ""; //"https://github.com/GabeIB/app-release/blob/master/Android.SauceLabs.Mobile.Sample.app.2.7.1.apk?raw=true";
     // end options
 
-    private AndroidDriver driver;
+//    private static ThreadLocal<AndroidDriver> driver = new ThreadLocal<AndroidDriver>();
+    private static ThreadLocal<IOSDriver> driver = new ThreadLocal<IOSDriver>();
 
     String usernameID = "test-Username";
     String passwordID = "test-Password";
     String submitButtonID = "test-LOGIN";
     By ProductTitle = By.xpath("//android.widget.TextView[@text='PRODUCTS']");
 
+
+
     @BeforeMethod
     public void setUp(Method method) throws Exception {
-        System.out.println("Saucelabs Android Appium test - setup method start");
+        System.out.println("Saucelabs Appium test - setup method start");
         String methodName = method.getName(); //added
         System.out.println("setting up "+methodName);
 
@@ -68,14 +75,31 @@ public class Android_SauceLabs_Appium_Test {
             appUrl = "storage:filename="+APP_NAME;
         }
 
+        if (!APP_EXTERNAL_URL.isEmpty()){
+            appUrl = APP_EXTERNAL_URL;
+        }
+
         DesiredCapabilities caps = new DesiredCapabilities();
-        caps.setCapability("appActivity", APP_ACTIVITY);
-        caps.setCapability("platformName", "Android");
+        if(!APP_ACTIVITY.isEmpty()) {
+            caps.setCapability("appActivity", APP_ACTIVITY);
+        }
+        caps.setCapability("platformName", PLATFORM_NAME);
+        //caps.setCapability("setupDeviceLock", true);
         caps.setCapability("app", appUrl);
-        caps.setCapability("platformVersion", ANDROID_VERSION);
+        caps.setCapability("appium:deviceName", "iPhone.*");
+        caps.setCapability("appium:automationName", "XCUITest");
+        //caps.setCapability("remoteAppsCacheLimit", 0);
+
+        if (!PLATFORM_VERSION.isEmpty()) {
+            caps.setCapability("platformVersion", PLATFORM_VERSION);
+        }
+        if (!DEVICE_NAME.isEmpty()) {
+            caps.setCapability("deviceName", DEVICE_NAME);
+        }
         MutableCapabilities sauceOptions = new MutableCapabilities();
         sauceOptions.setCapability("name", methodName); //Method added as parameter
-
+        //String appArray = "storage:filename=original.apk";
+        //sauceOptions.setCapability("otherApps", Arrays.asList(appArray));
         if (EMULATE) {
             caps.setCapability("automationName", "UiAutomator2");
             caps.setCapability("deviceName", "Android GoogleAPI Emulator"); //This will change to type of device e.g. Pixel 4 on Saucelabs
@@ -85,23 +109,24 @@ public class Android_SauceLabs_Appium_Test {
         }
         caps.setCapability("sauce:options", sauceOptions);
 
-        driver = new AndroidDriver(url, caps);
+        driver.set(new IOSDriver(url, caps));
     }
 
     @AfterMethod
     public void tearDown(ITestResult result) {
         System.out.println("Saucelabs Android EMU test - after hook");
         try{
-            if (driver != null) {
-                ((JavascriptExecutor) driver).executeScript("sauce:job-result=" + (result.isSuccess() ? "passed" : "failed"));
+            if (driver.get() != null) {
+                ((JavascriptExecutor) driver.get()).executeScript("sauce:job-result=" + (result.isSuccess() ? "passed" : "failed"));
             }
         }
         finally {
             System.out.println("release driver");
-            driver.quit();
+            driver.get().quit();
         }
     }
 
+    /*
     @Test
     public void loginToSwagLabsTestValid() {
         System.out.println("Sauce - Start loginToSwagLabsTestValid test");
@@ -111,6 +136,8 @@ public class Android_SauceLabs_Appium_Test {
         // Verification
         Assert.assertTrue(isOnProductsPage());
     }
+
+     */
 
     @Test
     public void loginTestValidProblem() {
@@ -124,23 +151,23 @@ public class Android_SauceLabs_Appium_Test {
 
     public void login(String user, String pass){
 
-        WebDriverWait wait = new WebDriverWait(driver, 5);
+        WebDriverWait wait = new WebDriverWait(driver.get(), 5);
         final WebElement usernameEdit = wait.until(ExpectedConditions.visibilityOfElementLocated(new MobileBy.ByAccessibilityId(usernameID)));
 
         usernameEdit.click();
         usernameEdit.sendKeys(user);
 
-        WebElement passwordEdit = driver.findElementByAccessibilityId(passwordID);
+        WebElement passwordEdit = driver.get().findElementByAccessibilityId(passwordID);
         passwordEdit.click();
         passwordEdit.sendKeys(pass);
 
-        WebElement submitButton = driver.findElementByAccessibilityId(submitButtonID);
+        WebElement submitButton = driver.get().findElementByAccessibilityId(submitButtonID);
         submitButton.click();
     }
 
     public boolean isOnProductsPage() {
         //Create an instance of a Appium explicit wait so that we can dynamically wait for an element
-        WebDriverWait wait = new WebDriverWait(driver, 5);
+        WebDriverWait wait = new WebDriverWait(driver.get(), 5);
 
         //wait for the product field to be visible and store that element into a variable
         try {
